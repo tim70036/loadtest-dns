@@ -37,15 +37,39 @@ def parse_dnsperf_output(file_path):
         'queries_sent': r'Queries sent:\s+(\d+)',
         'queries_completed': r'Queries completed:\s+(\d+)',
         'queries_lost': r'Queries lost:\s+(\d+)',
-        'response_codes_noerror': r'NOERROR:\s+(\d+)',
-        'response_codes_nxdomain': r'NXDOMAIN:\s+(\d+)',
-        'response_codes_servfail': r'SERVFAIL:\s+(\d+)',
-        'average_latency': r'Average:\s+([\d.]+)\s+sec',
-        'minimum_latency': r'Minimum:\s+([\d.]+)\s+sec',
-        'maximum_latency': r'Maximum:\s+([\d.]+)\s+sec',
         'qps_achieved': r'Queries per second:\s+([\d.]+)',
     }
     
+    # Updated response codes patterns to match actual dnsperf output format
+    response_patterns = {
+        'response_codes_noerror': r'NOERROR\s+(\d+)',
+        'response_codes_nxdomain': r'NXDOMAIN\s+(\d+)',
+        'response_codes_servfail': r'SERVFAIL\s+(\d+)',
+    }
+    
+    # Updated latency patterns to match actual dnsperf output format
+    latency_pattern = r'Average Latency \(s\):\s+([\d.]+)\s+\(min\s+([\d.]+),\s+max\s+([\d.]+)\)'
+    latency_match = re.search(latency_pattern, content)
+    
+    if latency_match:
+        metrics['average_latency'] = float(latency_match.group(1))
+        metrics['minimum_latency'] = float(latency_match.group(2))
+        metrics['maximum_latency'] = float(latency_match.group(3))
+    else:
+        # Fallback to old format patterns if new format not found
+        old_patterns = {
+            'average_latency': r'Average:\s+([\d.]+)\s+sec',
+            'minimum_latency': r'Minimum:\s+([\d.]+)\s+sec',
+            'maximum_latency': r'Maximum:\s+([\d.]+)\s+sec',
+        }
+        for key, pattern in old_patterns.items():
+            match = re.search(pattern, content)
+            if match:
+                metrics[key] = float(match.group(1))
+            else:
+                metrics[key] = 0
+    
+    # Parse basic patterns
     for key, pattern in patterns.items():
         match = re.search(pattern, content)
         if match:
@@ -53,6 +77,17 @@ def parse_dnsperf_output(file_path):
                 metrics[key] = float(match.group(1))
             except ValueError:
                 metrics[key] = match.group(1)
+        else:
+            metrics[key] = 0
+    
+    # Parse response codes patterns
+    for key, pattern in response_patterns.items():
+        match = re.search(pattern, content)
+        if match:
+            try:
+                metrics[key] = float(match.group(1))
+            except ValueError:
+                metrics[key] = 0
         else:
             metrics[key] = 0
     
@@ -139,7 +174,7 @@ def print_summary(metrics, file_path):
     else:
         print("   ❌ Poor latency: >200ms")
 
-def create_visualizations(metrics, output_dir="results"):
+def create_visualizations(metrics, output_dir="analyzer-results"):
     """Create visualizations of the test results"""
     
     if not PLOTTING_AVAILABLE:
@@ -217,7 +252,7 @@ def create_visualizations(metrics, output_dir="results"):
     else:
         plt.close()
 
-def save_json_report(metrics, file_path, output_dir="results"):
+def save_json_report(metrics, file_path, output_dir="analyzer-results"):
     """Save metrics as JSON for further analysis"""
     
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -238,7 +273,7 @@ def main():
     parser = argparse.ArgumentParser(description='Analyze DNS performance test results')
     parser.add_argument('file', help='Path to dnsperf output file')
     parser.add_argument('--no-plot', action='store_true', help='Skip generating plots')
-    parser.add_argument('--output-dir', default='results', help='Output directory for reports')
+    parser.add_argument('--output-dir', default='analyzer-results', help='Output directory for reports')
     
     args = parser.parse_args()
     

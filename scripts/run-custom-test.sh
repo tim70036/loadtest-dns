@@ -61,11 +61,11 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Create results directory if it doesn't exist
-mkdir -p results
+mkdir -p dnsperf-results
 
 # Generate timestamp for unique result files
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-RESULT_FILE="results/custom_test_${TIMESTAMP}.txt"
+RESULT_FILE="dnsperf-results/custom_test_${TIMESTAMP}.txt"
 
 echo "🎯 Starting Custom DNS Load Test for a.hnxhy888.com.cdn2.mlycdn.com"
 echo "📊 Configuration:"
@@ -115,7 +115,7 @@ echo "📄 Results saved to: $RESULT_FILE"
 echo ""
 
 # Create a symlink to the latest result
-ln -sf "$(basename $RESULT_FILE)" results/latest-custom-test.txt
+ln -sf "$(basename $RESULT_FILE)" dnsperf-results/latest-custom-test.txt
 
 # Extract key metrics
 echo "📈 Key Metrics:"

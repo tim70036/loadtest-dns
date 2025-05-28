@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Simple DNS Analysis Script using UV
-# This script uses uv to run the analysis with automatic dependency management
+# DNS Analysis Script using the standalone DNS Analyzer project
+# This script uses the dedicated dns-analyzer UV project for analysis
 
 set -e
 
-echo "🎯 DNS LoadTest Analyzer (UV-powered)"
+echo "🎯 DNS LoadTest Analyzer (Standalone DNS Analyzer)"
 echo ""
 
 # Check if uv is installed
@@ -41,34 +41,81 @@ if ! command -v uv &> /dev/null; then
     exit 1
 fi
 
+# Check if analyzer directory exists
+if [ ! -d "analyzer" ]; then
+    echo "❌ analyzer directory not found!"
+    echo "💡 Make sure you're running this script from the project root directory"
+    echo "   Expected structure: loadtest-dns/analyzer/"
+    exit 1
+fi
+
 # Show usage if no arguments
 if [ $# -eq 0 ]; then
     echo ""
     echo "💡 Usage: $0 <result-file> [options]"
     echo ""
     echo "Examples:"
-    echo "   $0 results/basic_test_20241220_143022.txt"
-    echo "   $0 results/latest-custom-test.txt --no-plot"
+    echo "   $0 dnsperf-results/basic_test_20241220_143022.txt"
+    echo "   $0 dnsperf-results/latest-custom-test.txt --no-plot"
     echo "   $0 --help"
     echo ""
     echo "📁 Available result files:"
-    if [ -d "results" ]; then
-        ls -1t results/*.txt 2>/dev/null | head -5 || echo "   No result files found"
+    if [ -d "dnsperf-results" ]; then
+        ls -1t dnsperf-results/*.txt 2>/dev/null | head -5 || echo "   No result files found"
     else
-        echo "   Results directory not found. Run a test first!"
+        echo "   dnsperf-results directory not found. Run a test first!"
     fi
     echo ""
     echo "🚀 Quick start:"
     echo "   ./test-your-domain.sh                    # Generate test results"
-    echo "   $0 results/quick_test_*.txt              # Analyze results"
+    echo "   $0 dnsperf-results/quick_test_*.txt      # Analyze results"
+    echo ""
+    echo "🔬 Using standalone DNS Analyzer project for enhanced analysis"
     exit 0
 fi
 
-echo "🔧 Setting up Python environment and running analysis..."
+# Create analyzer-results directory in the root directory if it doesn't exist
+mkdir -p analyzer-results
 
-# Use uv run with inline dependencies - this automatically manages the environment
-uv run --with matplotlib --with pandas --with numpy --with seaborn --with plotly --with click \
-    python scripts/analyze-results.py "$@"
+# Change to analyzer directory
+cd analyzer
+
+echo "🔧 Setting up DNS Analyzer environment..."
+
+# Check if dependencies are installed, if not, install them
+if [ ! -d ".venv" ]; then
+    echo "📦 Installing DNS Analyzer dependencies (one-time setup)..."
+    uv sync
+    echo "✅ Dependencies installed successfully"
+else
+    echo "✅ DNS Analyzer environment ready"
+fi
+
+echo "🔍 Running DNS performance analysis..."
+
+# Convert relative paths to absolute paths for the analyzer
+ARGS=()
+for arg in "$@"; do
+    if [[ "$arg" == ../* ]] || [[ "$arg" == /* ]] || [[ "$arg" == -* ]]; then
+        # Already absolute or relative to parent, or it's an option flag
+        ARGS+=("$arg")
+    elif [[ "$arg" == dnsperf-results/* ]]; then
+        # Convert dnsperf-results/ path to ../dnsperf-results/
+        ARGS+=("../$arg")
+    else
+        # Assume it's a file in the parent directory
+        ARGS+=("../$arg")
+    fi
+done
+
+# Add default output directory to analyzer-results in root unless user specified one
+if [[ ! " ${ARGS[@]} " =~ " --output-dir " ]]; then
+    ARGS+=("--output-dir" "../analyzer-results")
+fi
+
+# Run the DNS analyzer
+uv run dns-analyzer "${ARGS[@]}"
 
 echo ""
-echo "✅ Analysis completed!" 
+echo "✅ Analysis completed!"
+echo "📊 Check the analyzer-results/ directory for generated reports and visualizations" 

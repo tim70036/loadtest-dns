@@ -27,9 +27,9 @@ echo ""
 
 # Run a quick test
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-RESULT_FILE="results/quick_test_${TIMESTAMP}.txt"
+RESULT_FILE="dnsperf-results/quick_test_${TIMESTAMP}.txt"
 
-mkdir -p results
+mkdir -p dnsperf-results
 
 dnsperf -s 8.8.8.8 \
         -d /tmp/quick-test.txt \
@@ -53,7 +53,7 @@ echo "🚀 Next Steps:"
 echo "   1. Run full custom test: ./scripts/run-custom-test.sh"
 echo "   2. Analyze results: python3 scripts/analyze-results.py $RESULT_FILE"
 echo "   3. Test different DNS servers: ./scripts/run-custom-test.sh -s 1.1.1.1"
-echo "   4. View all results: ls -la results/"
+echo "   4. View all results: ls -la dnsperf-results/"
 
 # Clean up
 rm -f /tmp/quick-test.txt 

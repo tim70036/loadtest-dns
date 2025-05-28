@@ -8,13 +8,6 @@ This project provides tools and configurations for DNS load testing using `dnspe
 ```bash
 # Install dnsperf using Homebrew
 brew install dnsperf
-
-# Alternative: Install from source
-# git clone https://github.com/DNS-OARC/dnsperf.git
-# cd dnsperf
-# ./configure
-# make
-# sudo make install
 ```
 
 ### Linux Installation
@@ -34,11 +27,8 @@ sudo dnf install dnsperf
 ```
 loadtest-dns/
 ├── README.md
-├── USAGE-UV.md             # UV usage guide
-├── setup.sh
-├── analyze.sh              # Analysis menu
-├── analyze-uv.sh           # UV-powered analysis (recommended)
 ├── test-your-domain.sh     # Quick domain test
+├── analyze-uv.sh           # UV-powered analysis tool
 ├── configs/
 │   ├── basic-test.conf
 │   ├── stress-test.conf
@@ -50,88 +40,30 @@ loadtest-dns/
 ├── scripts/
 │   ├── run-basic-test.sh
 │   ├── run-stress-test.sh
-│   ├── run-custom-test.sh
-│   └── analyze-results.py
-└── results/
-    └── .gitkeep
+│   └── run-custom-test.sh
+├── analyzer/               # Standalone DNS analyzer project
+├── analyzer-results/       # Analysis reports and visualizations
+└── dnsperf-results/        # DNS test output files
 ```
 
 ## Quick Start
 
-1. **Setup the environment:**
-   ```bash
-   ./setup.sh
-   ```
-
-2. **Run a quick test for your domain:**
+1. **Run a quick test for your domain:**
    ```bash
    ./test-your-domain.sh
    ```
 
-3. **Analyze results with UV (recommended):**
+2. **Analyze results:**
    ```bash
-   ./analyze-uv.sh results/quick_test_*.txt
+   ./analyze-uv.sh dnsperf-results/quick_test_*.txt
    ```
 
-4. **Run more comprehensive tests:**
+3. **Run comprehensive tests:**
    ```bash
    ./scripts/run-basic-test.sh              # Basic test
    ./scripts/run-stress-test.sh             # Stress test
    ./scripts/run-custom-test.sh             # Custom test with options
    ```
-
-## Analysis Options
-
-### 🚀 **UV-Powered Analysis (Recommended)**
-
-The simplest and fastest way to analyze DNS test results:
-
-```bash
-# Automatic dependency management with UV
-./analyze-uv.sh results/your-test-file.txt
-
-# Without visualizations
-./analyze-uv.sh results/your-test-file.txt --no-plot
-
-# Show help
-./analyze-uv.sh --help
-```
-
-**Benefits of UV:**
-- ⚡ **Fast**: Much faster than pip for dependency resolution
-- 🔒 **Reliable**: Consistent dependency versions across environments
-- 🎯 **Simple**: Automatic environment management
-- 📦 **Modern**: No virtual environment setup needed
-- 🚀 **Zero Config**: Works out of the box
-
-### 📊 **Alternative Analysis Methods**
-
-```bash
-# Basic Python analysis (no dependencies)
-python3 scripts/analyze-results.py results/your-test-file.txt --no-plot
-
-# Manual setup with virtual environment
-python3 -m venv dns-env
-source dns-env/bin/activate
-pip install matplotlib pandas numpy seaborn plotly click
-python3 scripts/analyze-results.py results/your-test-file.txt
-```
-
-## Configuration
-
-### Query Files
-Query files contain the DNS queries to test. Format:
-```
-domain_name query_type
-example.com A
-example.com AAAA
-example.com MX
-```
-
-### Test Configurations
-- `basic-test.conf`: Light load testing
-- `stress-test.conf`: Heavy load testing
-- `custom-test.conf`: Customizable parameters
 
 ## Usage Examples
 
@@ -158,9 +90,63 @@ dnsperf -s your-dns-server.com -d queries/custom-queries.txt -l 120 -Q 500
 # Custom test with different DNS servers
 ./scripts/run-custom-test.sh -s 1.1.1.1 -q 300 -d 60
 
-# Analyze results with UV
-./analyze-uv.sh results/latest-custom-test.txt
+# Analyze results
+./analyze-uv.sh dnsperf-results/latest-custom-test.txt
 ```
+
+## Analysis with UV
+
+The project uses UV for fast and reliable dependency management:
+
+```bash
+# Analyze test results with visualizations
+./analyze-uv.sh dnsperf-results/your-test-file.txt
+
+# Without visualizations
+./analyze-uv.sh dnsperf-results/your-test-file.txt --no-plot
+
+# Show help
+./analyze-uv.sh --help
+```
+
+**Benefits of UV:**
+- ⚡ **Fast**: Much faster than pip for dependency resolution
+- 🔒 **Reliable**: Consistent dependency versions across environments
+- 🎯 **Simple**: Automatic environment management
+- 📦 **Modern**: No virtual environment setup needed
+
+### Standalone DNS Analyzer
+
+For advanced analysis, use the dedicated DNS analyzer project:
+
+```bash
+# Navigate to the standalone analyzer
+cd analyzer
+
+# Install dependencies (one-time setup)
+uv sync
+
+# Use the standalone analyzer
+uv run dns-analyzer dnsperf-results/your-test-file.txt
+```
+
+See `analyzer/README.md` for detailed usage instructions.
+
+## Configuration
+
+### Query Files
+Query files contain the DNS queries to test. Format:
+```
+domain_name query_type
+example.com A
+example.com AAAA
+example.com MX
+```
+
+### Test Configurations
+- `basic-test.conf`: Light load testing
+- `stress-test.conf`: Heavy load testing
+- `custom-test.conf`: Customizable parameters
 
 ## Parameters Explanation
 
@@ -193,7 +179,7 @@ The analysis provides:
 ### 1. Quick Domain Check
 ```bash
 ./test-your-domain.sh
-./analyze-uv.sh results/quick_test_*.txt
+./analyze-uv.sh dnsperf-results/quick_test_*.txt
 ```
 
 ### 2. Comprehensive Testing
@@ -203,8 +189,8 @@ The analysis provides:
 ./scripts/run-custom-test.sh -s 1.1.1.1 -q 200
 ./scripts/run-custom-test.sh -s 9.9.9.9 -q 200
 
-# Compare results with UV
-./analyze-uv.sh results/custom_test_*.txt
+# Compare results
+./analyze-uv.sh dnsperf-results/custom_test_*.txt
 ```
 
 ### 3. Performance Benchmarking
@@ -216,8 +202,8 @@ The analysis provides:
 ./scripts/run-stress-test.sh
 
 # Analyze and compare
-./analyze-uv.sh results/latest-basic-test.txt
-./analyze-uv.sh results/latest-stress-test.txt
+./analyze-uv.sh dnsperf-results/latest-basic-test.txt
+./analyze-uv.sh dnsperf-results/latest-stress-test.txt
 ```
 
 ## Troubleshooting
@@ -233,7 +219,6 @@ The analysis provides:
 - Monitor system resources during testing
 - Use multiple query files for varied testing
 - Test from different network locations
-- Use UV for consistent Python environments
 
 ### UV Installation
 UV will be automatically installed by the scripts, but if manual installation is needed:
@@ -246,19 +231,4 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Verify installation
 uv --version
-```
-
-### UV Usage Tips
-```bash
-# Check UV version
-uv --version
-
-# List available Python versions
-uv python list
-
-# Run with specific Python version
-uv run --python 3.11 python scripts/analyze-results.py results/test.txt
-
-# Install dependencies globally for project
-uv add matplotlib pandas numpy seaborn plotly click
 ``` 

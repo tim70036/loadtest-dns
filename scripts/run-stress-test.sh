@@ -14,11 +14,11 @@ CONCURRENT=10
 TIMEOUT=3
 
 # Create results directory if it doesn't exist
-mkdir -p results
+mkdir -p dnsperf-results
 
 # Generate timestamp for unique result files
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-RESULT_FILE="results/stress_test_${TIMESTAMP}.txt"
+RESULT_FILE="dnsperf-results/stress_test_${TIMESTAMP}.txt"
 
 echo "🔥 Starting Stress DNS Load Test..."
 echo "⚠️  WARNING: This is a high-intensity test!"
@@ -70,7 +70,7 @@ echo "📄 Results saved to: $RESULT_FILE"
 echo ""
 
 # Create a symlink to the latest result
-ln -sf "$(basename $RESULT_FILE)" results/latest-stress-test.txt
+ln -sf "$(basename $RESULT_FILE)" dnsperf-results/latest-stress-test.txt
 
 # Extract key metrics
 echo "📈 Key Metrics:"
@@ -90,5 +90,5 @@ fi
 echo ""
 echo "💡 Tips:"
 echo "   - View full results: cat $RESULT_FILE"
-echo "   - Compare with basic test: diff results/latest-basic-test.txt results/latest-stress-test.txt"
+echo "   - Compare with basic test: diff dnsperf-results/latest-basic-test.txt dnsperf-results/latest-stress-test.txt"
 echo "   - Adjust parameters in this script for different stress levels" 

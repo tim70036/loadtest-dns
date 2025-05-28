@@ -13,11 +13,11 @@ QPS=100
 TIMEOUT=5
 
 # Create results directory if it doesn't exist
-mkdir -p results
+mkdir -p dnsperf-results
 
 # Generate timestamp for unique result files
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-RESULT_FILE="results/basic_test_${TIMESTAMP}.txt"
+RESULT_FILE="dnsperf-results/basic_test_${TIMESTAMP}.txt"
 
 echo "🚀 Starting Basic DNS Load Test..."
 echo "📊 Configuration:"
@@ -57,7 +57,7 @@ echo "📄 Results saved to: $RESULT_FILE"
 echo ""
 
 # Create a symlink to the latest result
-ln -sf "$(basename $RESULT_FILE)" results/latest-basic-test.txt
+ln -sf "$(basename $RESULT_FILE)" dnsperf-results/latest-basic-test.txt
 
 # Extract key metrics
 echo "📈 Key Metrics:"
