@@ -1,0 +1,10 @@
+a.hnxhy888.com.cdn2.mlycdn.com A
+a.hnxhy888.com.cdn2.mlycdn.com AAAA
+a.hnxhy888.com.cdn2.mlycdn.com CNAME
+google.com A
+google.com AAAA
+cloudflare.com A
+cloudflare.com AAAA
+github.com A
+github.com AAAA
+stackoverflow.com A 

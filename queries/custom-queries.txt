@@ -1,0 +1,17 @@
+a.hnxhy888.com.cdn2.mlycdn.com A
+a.hnxhy888.com.cdn2.mlycdn.com AAAA
+a.hnxhy888.com.cdn2.mlycdn.com CNAME
+a.hnxhy888.com.cdn2.mlycdn.com TXT
+a.hnxhy888.com.cdn2.mlycdn.com NS
+a.hnxhy888.com.cdn2.mlycdn.com MX
+a.hnxhy888.com.cdn2.mlycdn.com SOA
+hnxhy888.com.cdn2.mlycdn.com A
+hnxhy888.com.cdn2.mlycdn.com AAAA
+hnxhy888.com.cdn2.mlycdn.com CNAME
+cdn2.mlycdn.com A
+cdn2.mlycdn.com AAAA
+cdn2.mlycdn.com NS
+mlycdn.com A
+mlycdn.com AAAA
+mlycdn.com NS
+mlycdn.com SOA 
