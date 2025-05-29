@@ -15,10 +15,11 @@ try:
     import matplotlib.pyplot as plt
     import pandas as pd
     import seaborn as sns
+    import numpy as np
     PLOTTING_AVAILABLE = True
 except ImportError:
     PLOTTING_AVAILABLE = False
-    print("⚠️  Plotting libraries not available. Install with: pip install matplotlib pandas seaborn")
+    print("⚠️  Plotting libraries not available. Install with: pip install matplotlib pandas seaborn numpy")
 
 def parse_dnsperf_output(file_path):
     """Parse dnsperf output file and extract metrics"""
@@ -28,9 +29,45 @@ def parse_dnsperf_output(file_path):
         return None
     
     metrics = {}
+    individual_latencies = []
     
     with open(file_path, 'r') as f:
         content = f.read()
+    
+    # Extract individual latency measurements from the detailed output
+    latency_pattern = r'> \w+ .* ([\d.]+)$'
+    for line in content.split('\n'):
+        match = re.search(latency_pattern, line.strip())
+        if match:
+            try:
+                latency = float(match.group(1))
+                individual_latencies.append(latency)
+            except ValueError:
+                continue
+    
+    # Calculate percentiles if we have individual latency data
+    if individual_latencies:
+        try:
+            import numpy as np
+            individual_latencies = np.array(individual_latencies)
+            metrics['p50_latency'] = np.percentile(individual_latencies, 50)
+            metrics['p95_latency'] = np.percentile(individual_latencies, 95)
+            metrics['p99_latency'] = np.percentile(individual_latencies, 99)
+            metrics['latency_std'] = np.std(individual_latencies)
+            metrics['individual_latencies_count'] = len(individual_latencies)
+        except ImportError:
+            print("⚠️  NumPy not available for percentile calculations. Install with: pip install numpy")
+            metrics['p50_latency'] = None
+            metrics['p95_latency'] = None
+            metrics['p99_latency'] = None
+            metrics['latency_std'] = None
+            metrics['individual_latencies_count'] = len(individual_latencies)
+    else:
+        metrics['p50_latency'] = None
+        metrics['p95_latency'] = None
+        metrics['p99_latency'] = None
+        metrics['latency_std'] = None
+        metrics['individual_latencies_count'] = 0
     
     # Extract basic metrics
     patterns = {
@@ -148,6 +185,21 @@ def print_summary(metrics, file_path):
     print(f"   Minimum Latency: {metrics['minimum_latency']:.3f}s")
     print(f"   Maximum Latency: {metrics['maximum_latency']:.3f}s")
     
+    # Add percentile latencies if available
+    if metrics.get('individual_latencies_count', 0) > 0:
+        print(f"   Latency Percentiles:")
+        if metrics.get('p50_latency') is not None:
+            print(f"     P50 (median): {metrics['p50_latency']:.3f}s")
+        if metrics.get('p95_latency') is not None:
+            print(f"     P95: {metrics['p95_latency']:.3f}s")
+        if metrics.get('p99_latency') is not None:
+            print(f"     P99: {metrics['p99_latency']:.3f}s")
+        if metrics.get('latency_std') is not None:
+            print(f"   Latency Std Dev: {metrics['latency_std']:.3f}s")
+        print(f"   Individual measurements: {metrics['individual_latencies_count']}")
+    else:
+        print("   ⚠️  No individual latency measurements found for percentile calculation")
+    
     # Response Codes
     print("\n📋 Response Codes:")
     print(f"   NOERROR: {int(metrics['response_codes_noerror'])}")
@@ -215,15 +267,32 @@ def create_visualizations(metrics, output_dir="analyzer-results"):
         metrics['average_latency'] * 1000,
         metrics['maximum_latency'] * 1000
     ]
-    bars = ax3.bar(latency_metrics, latency_values, color=['#3498db', '#9b59b6', '#e67e22'])
-    ax3.set_title('Latency Metrics (ms)')
+    
+    # Add percentiles if available
+    if metrics.get('individual_latencies_count', 0) > 0 and metrics.get('p50_latency') is not None:
+        latency_metrics = ['Min', 'P50', 'Avg', 'P95', 'P99', 'Max']
+        latency_values = [
+            metrics['minimum_latency'] * 1000,
+            metrics['p50_latency'] * 1000,
+            metrics['average_latency'] * 1000,
+            metrics['p95_latency'] * 1000,
+            metrics['p99_latency'] * 1000,
+            metrics['maximum_latency'] * 1000
+        ]
+        colors = ['#3498db', '#2ecc71', '#9b59b6', '#f39c12', '#e74c3c', '#e67e22']
+        bars = ax3.bar(latency_metrics, latency_values, color=colors)
+        ax3.set_title('Latency Distribution (ms)')
+    else:
+        bars = ax3.bar(latency_metrics, latency_values, color=['#3498db', '#9b59b6', '#e67e22'])
+        ax3.set_title('Latency Metrics (ms)')
+    
     ax3.set_ylabel('Latency (ms)')
     
     # Add value labels on bars
     for bar, value in zip(bars, latency_values):
         height = bar.get_height()
         ax3.text(bar.get_x() + bar.get_width()/2., height + height*0.01,
-                f'{value:.1f}ms', ha='center', va='bottom')
+                f'{value:.1f}ms', ha='center', va='bottom', fontsize=8)
     
     # 4. QPS Comparison
     qps_data = ['Target QPS', 'Achieved QPS']

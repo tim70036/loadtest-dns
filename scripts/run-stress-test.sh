@@ -5,13 +5,15 @@
 
 set -e
 
-# Configuration
-DNS_SERVER="8.8.8.8"
-QUERY_FILE="queries/mixed-queries.txt"
-DURATION=60
-QPS=1000
-CONCURRENT=10
-TIMEOUT=3
+# Load configuration from config file
+CONFIG_FILE="configs/stress-test.conf"
+if [ -f "$CONFIG_FILE" ]; then
+    echo "📋 Loading configuration from $CONFIG_FILE"
+    source "$CONFIG_FILE"
+else
+    echo "❌ Configuration file not found: $CONFIG_FILE"
+    exit 1
+fi
 
 # Create results directory if it doesn't exist
 mkdir -p dnsperf-results
@@ -23,6 +25,7 @@ RESULT_FILE="dnsperf-results/stress_test_${TIMESTAMP}.txt"
 echo "🔥 Starting Stress DNS Load Test..."
 echo "⚠️  WARNING: This is a high-intensity test!"
 echo "📊 Configuration:"
+echo "   Config File: $CONFIG_FILE"
 echo "   DNS Server: $DNS_SERVER"
 echo "   Query File: $QUERY_FILE"
 echo "   Duration: ${DURATION}s"
@@ -61,7 +64,7 @@ dnsperf -s $DNS_SERVER \
         -Q $QPS \
         -c $CONCURRENT \
         -t $TIMEOUT \
-        -v \
+        $EXTRA_OPTIONS \
         | tee $RESULT_FILE
 
 echo ""
@@ -77,18 +80,23 @@ echo "📈 Key Metrics:"
 grep -E "(Queries sent|Queries completed|Response codes|Average|Percentage|Lost)" $RESULT_FILE | head -15
 
 echo ""
-echo "💡 Analysis:"
-# Calculate success rate
-SENT=$(grep "Queries sent:" $RESULT_FILE | awk '{print $3}' || echo "0")
-COMPLETED=$(grep "Queries completed:" $RESULT_FILE | awk '{print $3}' || echo "0")
+echo "🔬 Running detailed analysis..."
+echo "=============================================="
 
-if [ "$SENT" -gt 0 ]; then
-    SUCCESS_RATE=$(echo "scale=2; $COMPLETED * 100 / $SENT" | bc -l 2>/dev/null || echo "N/A")
-    echo "   Success Rate: ${SUCCESS_RATE}%"
+# Check if analyzer script exists and run it
+ANALYZER_SCRIPT="./scripts/analyze-uv.sh"
+if [ -f "$ANALYZER_SCRIPT" ]; then
+    echo "📊 Launching DNS performance analyzer..."
+    $ANALYZER_SCRIPT "$RESULT_FILE"
+else
+    echo "⚠️  Analyzer script not found: $ANALYZER_SCRIPT"
+    echo "💡 You can manually analyze results with:"
+    echo "   ./scripts/analyze-uv.sh $RESULT_FILE"
 fi
 
 echo ""
 echo "💡 Tips:"
 echo "   - View full results: cat $RESULT_FILE"
 echo "   - Compare with basic test: diff dnsperf-results/latest-basic-test.txt dnsperf-results/latest-stress-test.txt"
-echo "   - Adjust parameters in this script for different stress levels" 
+echo "   - Adjust parameters in config: edit $CONFIG_FILE"
+echo "   - Analysis reports: check analyzer-results/ directory" 
