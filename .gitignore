@@ -10,7 +10,7 @@ logs/
 *.out
 
 # Analyzer Subfolder - Python Dependencies
-analyzer/__pycache__/
+analyzer/dns_analyzer/__pycache__/
 analyzer/*.py[cod]
 analyzer/*$py.class
 analyzer/venv/

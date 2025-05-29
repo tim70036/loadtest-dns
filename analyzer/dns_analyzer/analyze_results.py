@@ -82,6 +82,7 @@ def parse_dnsperf_output(file_path):
         'response_codes_noerror': r'NOERROR\s+(\d+)',
         'response_codes_nxdomain': r'NXDOMAIN\s+(\d+)',
         'response_codes_servfail': r'SERVFAIL\s+(\d+)',
+        'response_codes_refused': r'REFUSED\s+(\d+)',
     }
     
     # Updated latency patterns to match actual dnsperf output format
@@ -105,6 +106,17 @@ def parse_dnsperf_output(file_path):
                 metrics[key] = float(match.group(1))
             else:
                 metrics[key] = 0
+    
+    # Parse packet size information
+    packet_size_pattern = r'Average packet size:\s+request\s+(\d+),\s+response\s+(\d+)'
+    packet_match = re.search(packet_size_pattern, content)
+    
+    if packet_match:
+        metrics['request_packet_size'] = int(packet_match.group(1))
+        metrics['response_packet_size'] = int(packet_match.group(2))
+    else:
+        metrics['request_packet_size'] = 0
+        metrics['response_packet_size'] = 0
     
     # Parse basic patterns
     for key, pattern in patterns.items():
@@ -184,6 +196,8 @@ def print_summary(metrics, file_path):
     print(f"   Average Latency: {metrics['average_latency']:.3f}s")
     print(f"   Minimum Latency: {metrics['minimum_latency']:.3f}s")
     print(f"   Maximum Latency: {metrics['maximum_latency']:.3f}s")
+    print(f"   Request Packet Size: {metrics['request_packet_size']} bytes")
+    print(f"   Response Packet Size: {metrics['response_packet_size']} bytes")
     
     # Add percentile latencies if available
     if metrics.get('individual_latencies_count', 0) > 0:
@@ -205,6 +219,7 @@ def print_summary(metrics, file_path):
     print(f"   NOERROR: {int(metrics['response_codes_noerror'])}")
     print(f"   NXDOMAIN: {int(metrics['response_codes_nxdomain'])}")
     print(f"   SERVFAIL: {int(metrics['response_codes_servfail'])}")
+    print(f"   REFUSED: {int(metrics['response_codes_refused'])}")
     
     # Performance Assessment
     print("\n🎯 Performance Assessment:")
@@ -235,7 +250,7 @@ def create_visualizations(metrics, output_dir="analyzer-results"):
     
     # Set style
     plt.style.use('seaborn-v0_8')
-    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 10))
+    fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(2, 3, figsize=(18, 10))
     
     # 1. Success vs Loss Rate
     success_data = [metrics['success_rate'], metrics['loss_rate']]
@@ -248,10 +263,11 @@ def create_visualizations(metrics, output_dir="analyzer-results"):
     response_codes = [
         metrics['response_codes_noerror'],
         metrics['response_codes_nxdomain'],
-        metrics['response_codes_servfail']
+        metrics['response_codes_servfail'],
+        metrics['response_codes_refused']
     ]
-    response_labels = ['NOERROR', 'NXDOMAIN', 'SERVFAIL']
-    response_colors = ['#27ae60', '#f39c12', '#e74c3c']
+    response_labels = ['NOERROR', 'NXDOMAIN', 'SERVFAIL', 'REFUSED']
+    response_colors = ['#27ae60', '#f39c12', '#e74c3c', '#8e44ad']
     
     # Only show non-zero response codes
     non_zero_codes = [(code, label, color) for code, label, color in zip(response_codes, response_labels, response_colors) if code > 0]
@@ -306,6 +322,22 @@ def create_visualizations(metrics, output_dir="analyzer-results"):
         height = bar.get_height()
         ax4.text(bar.get_x() + bar.get_width()/2., height + height*0.01,
                 f'{value:.1f}', ha='center', va='bottom')
+    
+    # 5. Packet Size Comparison
+    packet_size_data = ['Request Packet Size', 'Response Packet Size']
+    packet_size_values = [metrics['request_packet_size'], metrics['response_packet_size']]
+    bars = ax5.bar(packet_size_data, packet_size_values, color=['#9b59b6', '#e67e22'])
+    ax5.set_title('Packet Size: Request vs Response')
+    ax5.set_ylabel('Packet Size (bytes)')
+    
+    # Add value labels on bars
+    for bar, value in zip(bars, packet_size_values):
+        height = bar.get_height()
+        ax5.text(bar.get_x() + bar.get_width()/2., height + height*0.01,
+                f'{value} bytes', ha='center', va='bottom')
+    
+    # 6. Empty placeholder or additional metric
+    ax6.axis('off')  # Hide the sixth subplot for now
     
     plt.tight_layout()
     
