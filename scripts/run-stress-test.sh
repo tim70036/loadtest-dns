@@ -62,6 +62,7 @@ dnsperf -s $DNS_SERVER \
         -d $QUERY_FILE \
         -l $DURATION \
         -Q $QPS \
+        -q $QPS \
         -c $CONCURRENT \
         -t $TIMEOUT \
         $EXTRA_OPTIONS \
