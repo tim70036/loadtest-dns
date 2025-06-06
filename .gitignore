@@ -2,7 +2,6 @@
 
 # Test Results and Output Directories
 dnsperf-results/
-analyzer-results/
 results/
 output/
 logs/

@@ -1,0 +1,30 @@
+{
+  "timestamp": "2025-06-04T03:31:34.315835",
+  "source_file": "../dnsperf-results/basic_test_20250604_030105.txt",
+  "metrics": {
+    "p50_latency": 0.050103,
+    "p95_latency": 0.05376,
+    "p99_latency": 0.054039,
+    "latency_std": 0.023848625101327913,
+    "individual_latencies_count": 16199178,
+    "average_latency": 0.050482,
+    "minimum_latency": 0.04601,
+    "maximum_latency": 0.9862,
+    "request_packet_size": 48,
+    "response_packet_size": 109,
+    "queries_sent": 16200000.0,
+    "queries_completed": 16199178.0,
+    "queries_lost": 822.0,
+    "qps_achieved": 8999.280809,
+    "response_codes_noerror": 16199178.0,
+    "response_codes_nxdomain": 0,
+    "response_codes_servfail": 0,
+    "response_codes_refused": 0,
+    "success_rate": 99.99492592592593,
+    "loss_rate": 0.005074074074074075,
+    "dns_server": "166.117.189.163",
+    "duration": "1800",
+    "target_qps": "9000",
+    "concurrent": "256"
+  }
+}
